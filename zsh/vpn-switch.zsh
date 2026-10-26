@@ -1,11 +1,27 @@
 # Both profiles share split routes, DNS handling, and saved credentials.
+function _vpn-switch-ready() {
+    local service=$1 attempt policy_route public_route
+    for attempt in {1..45}; do
+        systemctl is-active --quiet "$service" || return 1
+        policy_route=$(ip -4 route show table 10077 2>/dev/null)
+        public_route=$(ip -4 route get 1.1.1.1 2>/dev/null)
+        if [[ "$policy_route" == *'default via '*'dev tunmgid'* \
+            && "$public_route" == *'dev enp1s0f0'* ]]; then
+            return 0
+        fi
+        sleep 1
+    done
+    print -u2 'VPN routes did not become ready within 45 seconds.'
+    return 1
+}
+
 function vpn-switch() {
     local target=${1:-status}
     local eu_service=openvpn-client@mgid-eu-split.service
     local ua_service=openvpn-client@mgid-ua-split.service
     local dns_service=mgid-vpn-domain-routing.service
     local helper_service=devbox-vpn.service
-    local desired previous='' profile switch_result
+    local desired previous='' opposite profile switch_result
 
     if (( $# > 1 )); then
         print -u2 'Usage: vpn-switch [eu|ua|off|status]'
@@ -51,6 +67,7 @@ function vpn-switch() {
 
     desired="openvpn-client@mgid-$target-split.service"
     if systemctl is-active --quiet "$desired"; then
+        _vpn-switch-ready "$desired" || return $?
         print "VPN: ${(U)target} split is already running"
         return 0
     fi
@@ -62,15 +79,28 @@ function vpn-switch() {
         fi
     done
 
-    # Conflicting units stop the other profile and the legacy helper first.
+    if [[ "$target" == eu ]]; then
+        opposite=$ua_service
+    else
+        opposite=$eu_service
+    fi
+
+    # Wait for the previous client to release the shared tunnel interface.
     # NOPASSWD sudo is already configured; -n prevents an unexpected prompt.
+    sudo -n systemctl stop "$opposite" "$helper_service" || return $?
     sudo -n systemctl start "$desired"
     switch_result=$?
+    if (( switch_result == 0 )); then
+        _vpn-switch-ready "$desired"
+        switch_result=$?
+    fi
     if (( switch_result != 0 )); then
         sudo -n systemctl stop "$desired" || return $?
         if [[ -n "$previous" ]]; then
             print -u2 'Connection failed; restoring the previous VPN.'
-            sudo -n systemctl start "$previous" || print -u2 'Could not restore the previous VPN; check its service status.'
+            if ! sudo -n systemctl start "$previous" || ! _vpn-switch-ready "$previous"; then
+                print -u2 'Could not restore the previous VPN; check its service status.'
+            fi
         fi
         return "$switch_result"
     fi
