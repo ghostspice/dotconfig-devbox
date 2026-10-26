@@ -1,0 +1,52 @@
+# Local credentials and service connection state.
+/.aws/
+/.codex/
+/com.docker.sandboxes/
+/glab-cli/config.yml
+/mcp-server/
+/slack-cli/env
+/systemd/user/mcp-server.service.d/
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.key
+*.pem
+
+# Application sessions, history, and telemetry.
+/fish/fish_variables
+/go/telemetry/
+/herdr/session.json
+/herdr/session-snapshots/
+/herdr/release-notes.json
+/revdiff/history/
+/sandboxes/sandboxes/first-login.json
+/sandboxes/sandboxes/first-run-import.json
+/sandboxes/sandboxes/locks/
+/sandboxes/sandboxes/*.lock
+
+# Enabled systemd units are specific to this machine.
+/systemd/user/*.wants/
+/systemd/user/*.requires/
+
+# Generated environments, caches, and runtime files.
+.venv/
+venv/
+*-venv/
+__pycache__/
+*.py[cod]
+node_modules/
+.cache/
+*.log
+*.log.*
+*.pid
+*.sock
+
+# Editor, temporary, and backup files.
+.DS_Store
+*~
+*.swp
+*.swo
+*.tmp
+*.bak
+*.before-*
