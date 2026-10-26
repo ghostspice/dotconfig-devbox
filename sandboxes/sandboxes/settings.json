@@ -1,0 +1,4 @@
+{
+  "mcp.forceLocalGateway": true,
+  "ssh.agentSocketPath": "/home/ubuntu/.ssh/proton-pass-agent.sock"
+}

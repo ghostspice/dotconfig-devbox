@@ -1,0 +1,14 @@
+[Unit]
+Description=Proton Pass SSH Agent
+After=network-online.target
+
+[Service]
+Type=simple
+Environment=PROTON_PASS_KEY_PROVIDER=fs
+Environment=PROTON_PASS_SESSION_DIR=/home/ubuntu/.local/share/proton-pass-cli/ssh-agent-fs
+ExecStart=/home/ubuntu/.local/bin/pass-cli ssh-agent start --socket-path /home/ubuntu/.ssh/proton-pass-agent.sock
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

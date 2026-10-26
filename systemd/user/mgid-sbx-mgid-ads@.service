@@ -1,0 +1,17 @@
+[Unit]
+Description=Native MGID Ads development stack in Docker Sandbox %I
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment="SBX_CONFIG_ROOT=/home/ubuntu/.sbx"
+ExecStart=/usr/bin/env bash "/home/ubuntu/.local/libexec/mgid-sbx/service-run.sh" %I
+ExecStop=/usr/bin/env bash "/home/ubuntu/.local/libexec/mgid-sbx/service-stop.sh" %I
+Restart=on-failure
+RestartSec=2s
+TimeoutStopSec=60s
+KillMode=control-group
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,4 @@
+version: v1
+settings:
+  dismissed_upsells:
+    governance: true
